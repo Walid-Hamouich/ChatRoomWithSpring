@@ -4,11 +4,97 @@
     <meta charset="UTF-8">
     <title>ChatApp By Tech-nova</title>
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .hidden {
+            display: none;
+        }
+        .username-page-container, .chat-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .title {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .username-submit, .primary {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .accent {
+            background-color: #28a745;
+        }
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        #localVideo, #remoteVideo {
+            width: 45%;
+            height: 200px;
+            background-color: #000;
+            margin: 10px 0;
+        }
+        #messageArea {
+            list-style: none;
+            padding: 0;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+            padding: 10px;
+        }
+        #messageArea li {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        .input-group {
+            display: flex;
+        }
+        .input-group input {
+            flex: 1;
+        }
+        .input-group button {
+            margin-left: 10px;
+        }
+        .connecting {
+            text-align: center;
+            padding: 10px;
+            background: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
 <body>
 <div id="username-page">
     <div class="username-page-container">
-        <h1 class="title">Tapper un username pour rejoindre le chatroom</h1>
+        <h1 class="title">Enter a username to join the chatroom</h1>
         <form id="usernameForm" name="usernameForm">
             <div class="form-group">
                 <input type="text" id="name" placeholder="Username" autocomplete="off" class="form-control" />
@@ -20,18 +106,21 @@
     </div>
 </div>
 
-
 <div id="chat-page" class="hidden">
     <div class="chat-container">
         <div class="chat-header">
             <h2>ChatRoom - By Tech-nova</h2>
         </div>
-        <div class="connecting">
-            Connecting...
-        </div>
-        <ul id="messageArea">
 
-        </ul>
+        <div class="video-container">
+            <video id="localVideo" autoplay muted></video>
+            <video id="remoteVideo" autoplay></video>
+        </div>
+        <button id="startCallButton" class="primary">Start Call</button>
+        <div class="connecting hidden">Connecting...</div>
+
+        <ul id="messageArea"></ul>
+
         <form id="messageForm" name="messageForm">
             <div class="form-group">
                 <div class="input-group clearfix">
@@ -43,12 +132,30 @@
     </div>
 </div>
 
-
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.1.4/sockjs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 <script src="/js/main.js"></script>
+<script src="/js/webrtc.js"></script>
+<script>
+    document.getElementById('usernameForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const username = document.getElementById('name').value.trim();
+        if (username) {
+            document.getElementById('username-page').classList.add('hidden');
+            document.getElementById('chat-page').classList.remove('hidden');
+            // Additional logic to connect user with the username
+        }
+    });
+
+    document.getElementById('startCallButton').addEventListener('click', function() {
+        document.querySelector('.connecting').classList.remove('hidden');
+        startCall();
+    });
+
+    function startCall() {
+        // WebRTC start call logic here
+        document.querySelector('.connecting').classList.add('hidden');
+    }
+</script>
 </body>
 </html>
-
-
