@@ -1,76 +1,78 @@
-const localVideo = document.getElementById('localVideo');
-const remoteVideo = document.getElementById('remoteVideo');
+document.addEventListener("DOMContentLoaded", function() {
+    const localVideo = document.getElementById('localVideo');
+    const remoteVideo = document.getElementById('remoteVideo');
+    const startCallButton = document.getElementById('startCallButton');
 
-let localStream;
-let peerConnection;
-const configuration = {
-    'iceServers': [
-        {'urls': 'stun:stun.l.google.com:19302'}
-    ]
-};
+    let localStream;
+    let peerConnection;
+    const configuration = {
+        'iceServers': [
+            {'urls': 'stun:stun.l.google.com:19302'}
+        ]
+    };
 
-const socket = new WebSocket('ws://'+location.host+'/signaling');
+    const socket = new WebSocket('wss://'+location.host+'/signaling');
 
-socket.onmessage = (message) => {
-    const data = JSON.parse(message.data);
+    socket.onmessage = (message) => {
+        const data = JSON.parse(message.data);
 
-    if (data.type === 'offer') {
-        handleOffer(data.offer);
-    } else if (data.type === 'answer') {
-        handleAnswer(data.answer);
-    } else if (data.type === 'candidate') {
-        handleCandidate(data.candidate);
-    }
-};
-
-navigator.mediaDevices.getUserMedia({video: true, audio: true})
-    .then(stream => {
-        localVideo.srcObject = stream;
-        localStream = stream;
-    })
-    .catch(error => console.error('Error accessing media devices.', error));
-
-const startCall = () => {
-    peerConnection = new RTCPeerConnection(configuration);
-
-    peerConnection.onicecandidate = event => {
-        if (event.candidate) {
-            socket.send(JSON.stringify({'type': 'candidate', 'candidate': event.candidate}));
+        if (data.type === 'offer') {
+            handleOffer(data.offer);
+        } else if (data.type === 'answer') {
+            handleAnswer(data.answer);
+        } else if (data.type === 'candidate') {
+            handleCandidate(data.candidate);
         }
     };
 
-    peerConnection.ontrack = event => {
-        remoteVideo.srcObject = event.streams[0];
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+        .then(stream => {
+            console.log('Got Media Stream:', stream);
+            localVideo.srcObject = stream;
+            localStream = stream;
+        })
+        .catch(error => console.error('Error accessing media devices:', error));
+
+    const startCall = () => {
+        peerConnection = new RTCPeerConnection(configuration);
+
+        peerConnection.onicecandidate = event => {
+            if (event.candidate) {
+                socket.send(JSON.stringify({ 'type': 'candidate', 'candidate': event.candidate }));
+            }
+        };
+
+        peerConnection.ontrack = event => {
+            remoteVideo.srcObject = event.streams[0];
+        };
+
+        localStream.getTracks().forEach(track => {
+            peerConnection.addTrack(track, localStream);
+        });
+
+        peerConnection.createOffer()
+            .then(offer => {
+                peerConnection.setLocalDescription(offer);
+                socket.send(JSON.stringify({ 'type': 'offer', 'offer': offer }));
+            });
     };
 
-    localStream.getTracks().forEach(track => {
-        peerConnection.addTrack(track, localStream);
-    });
+    const handleOffer = (offer) => {
+        peerConnection.setRemoteDescription(offer);
+        peerConnection.createAnswer()
+            .then(answer => {
+                peerConnection.setLocalDescription(answer);
+                socket.send(JSON.stringify({ 'type': 'answer', 'answer': answer }));
+            });
+    };
 
-    peerConnection.createOffer()
-        .then(offer => {
-            peerConnection.setLocalDescription(offer);
-            socket.send(JSON.stringify({'type': 'offer', 'offer': offer}));
-        });
-};
+    const handleAnswer = (answer) => {
+        peerConnection.setRemoteDescription(answer);
+    };
 
-const handleOffer = (offer) => {
-    peerConnection.setRemoteDescription(offer);
-    peerConnection.createAnswer()
-        .then(answer => {
-            peerConnection.setLocalDescription(answer);
-            socket.send(JSON.stringify({'type': 'answer', 'answer': answer}));
-        });
-};
+    const handleCandidate = (candidate) => {
+        peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+    };
 
-const handleAnswer = (answer) => {
-    peerConnection.setRemoteDescription(answer);
-};
-
-const handleCandidate = (candidate) => {
-    peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
-};
-
-// Call startCall() when ready to initiate the call, e.g., via a button click
-document.getElementById('startCallButton').addEventListener('click', startCall);
-
+    startCallButton.addEventListener('click', startCall);
+});
