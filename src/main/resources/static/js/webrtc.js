@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", function() {
     };
 
     // Ensure you use wss:// for secure WebSocket
-    const socket = new WebSocket('wss://192.168.11.100:8080/signaling');
+    const socket = new WebSocket('wss://'+location.host+':8080/signaling');
 
     socket.onmessage = (message) => {
         const data = JSON.parse(message.data);
