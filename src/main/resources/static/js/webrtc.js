@@ -11,7 +11,8 @@ document.addEventListener("DOMContentLoaded", function() {
         ]
     };
 
-    const socket = new WebSocket('wss://'+location.host+'/signaling');
+    // Ensure you use wss:// for secure WebSocket
+    const socket = new WebSocket('wss://192.168.11.100:8080/signaling');
 
     socket.onmessage = (message) => {
         const data = JSON.parse(message.data);
@@ -31,7 +32,10 @@ document.addEventListener("DOMContentLoaded", function() {
             localVideo.srcObject = stream;
             localStream = stream;
         })
-        .catch(error => console.error('Error accessing media devices:', error));
+        .catch(error => {
+            console.error('Error accessing media devices:', error);
+            alert('Could not access camera. Please check your browser settings and permissions.');
+        });
 
     const startCall = () => {
         peerConnection = new RTCPeerConnection(configuration);
