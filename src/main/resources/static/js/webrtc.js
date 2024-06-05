@@ -9,7 +9,7 @@ const configuration = {
     ]
 };
 
-const socket = new WebSocket('ws://localhost:8080/signaling');
+const socket = new WebSocket('ws://'+location.host+'/signaling');
 
 socket.onmessage = (message) => {
     const data = JSON.parse(message.data);
